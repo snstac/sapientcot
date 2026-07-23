@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """SAPIENT (BSI Flex 335) to TAK Gateway."""
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 try:
     from .constants import (  # NOQA
@@ -15,6 +15,7 @@ try:
         DEFAULT_LEN_BYTES,
         DEFAULT_LEN_ENDIAN,
         AIR_CLASSES,
+        CLASS_COT_TYPES,
     )
     from .functions import sapient_to_cot, create_tasks  # NOQA
     from .classes import SapientWorker  # NOQA

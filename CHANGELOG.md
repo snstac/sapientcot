@@ -1,3 +1,10 @@
+## SAPIENTCOT 0.1.2
+
+- General ISR classification -> CoT battle-dimension mapping (SAPIENT is not only
+  C-UAS): person -> ground infantry, vehicle -> ground vehicle, vessel -> sea
+  surface, drone/UAS -> air; unclassified falls back to unknown **ground**
+  (default type changed a-u-A -> a-u-G). `COT_TYPE` still forces one type.
+
 ## SAPIENTCOT 0.1.1
 
 - Fix wire framing: SAPIENT length prefix is 4-byte **little-endian** (per the DSTL

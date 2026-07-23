@@ -23,6 +23,24 @@ def _best_classification(detection) -> tuple:
     return best
 
 
+def _cot_type_for(cls_type: str, config) -> str:
+    """Map a SAPIENT classification string to a CoT type (battle dimension).
+
+    An explicit `COT_TYPE` in config, when set, forces the type for every
+    detection (e.g. a pure C-UAS deployment). Otherwise the classification drives
+    it (air / ground / vehicle / person / sea), falling back to DEFAULT_COT_TYPE
+    (unknown ground) — SAPIENT is general ISR, not only C-UAS.
+    """
+    forced = config.get("COT_TYPE")
+    if forced:
+        return forced
+    lc = (cls_type or "").lower()
+    for keywords, cot in sapientcot.CLASS_COT_TYPES:
+        if any(k in lc for k in keywords):
+            return cot
+    return sapientcot.DEFAULT_COT_TYPE
+
+
 def _latlon(detection) -> Optional[tuple]:
     """Extract (lat, lon, hae) in WGS84 degrees from a DetectionReport, or None.
 
@@ -60,14 +78,8 @@ def sapient_to_cot_xml(
     uid = f"SAPIENT.{node_id}.{object_id}"
 
     cls_type, cls_conf = _best_classification(dr)
-    cot_type = config.get("COT_TYPE", sapientcot.DEFAULT_COT_TYPE)
     cot_stale = int(config.get("COT_STALE", sapientcot.DEFAULT_COT_STALE))
-
-    # A detection classified as air/UAS keeps the (configurable) air type; this
-    # is where a deployment can map SAPIENT classes to specific CoT types.
-    lc = cls_type.lower()
-    if any(k in lc for k in sapientcot.AIR_CLASSES):
-        cot_type = config.get("COT_TYPE", sapientcot.DEFAULT_COT_TYPE)
+    cot_type = _cot_type_for(cls_type, config)
 
     cot_time = pytak.cot_time()
     event = ET.Element("event")

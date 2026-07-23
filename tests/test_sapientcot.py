@@ -45,6 +45,33 @@ class SapientCotTestCase(unittest.TestCase):
         self.assertAlmostEqual(float(point.get("hae")), 120.0, places=1)
         self.assertEqual(cot.find("detail/contact").get("callsign"), "Drone")
 
+    def _msg_with_class(self, cls):
+        msg = _detection_message()
+        del msg.detection_report.classification[:]
+        if cls is not None:
+            c = msg.detection_report.classification.add()
+            c.type = cls
+            c.confidence = 0.9
+        return msg
+
+    def test_classification_maps_to_battle_dimension(self):
+        # SAPIENT is general ISR: air / ground / vehicle / person / sea / default.
+        cases = {
+            "Drone": "a-u-A", "Fixed Wing UAV": "a-u-A",
+            "Person": "a-u-G-U-C-I", "Pedestrian": "a-u-G-U-C-I",
+            "Truck": "a-u-G-E-V-C", "Vehicle": "a-u-G-E-V-C",
+            "Boat": "a-u-S-X", "Ship": "a-u-S-X",
+            "Wombat": "a-u-G", None: "a-u-G",  # unknown/unclassified -> ground
+        }
+        for cls, expect in cases.items():
+            cot = fn.sapient_to_cot_xml(self._msg_with_class(cls), {})
+            self.assertEqual(cot.get("type"), expect, f"{cls!r} -> {cot.get('type')}, expected {expect}")
+
+    def test_cot_type_config_override_forces_type(self):
+        # A pure C-UAS deployment can force everything to one type.
+        cot = fn.sapient_to_cot_xml(self._msg_with_class("Person"), {"COT_TYPE": "a-h-A-M-F-Q"})
+        self.assertEqual(cot.get("type"), "a-h-A-M-F-Q")
+
     def test_radians_converted(self):
         import math
         msg = _detection_message()
