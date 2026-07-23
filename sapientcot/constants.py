@@ -18,8 +18,10 @@ DEFAULT_COT_STALE: str = "60"
 # Classification substrings that mark a detection as an air/UAS track.
 AIR_CLASSES = ("drone", "uav", "uas", "quadcopter", "aircraft", "air", "rotary", "fixed wing")
 
-# Wire framing: SAPIENT BSI Flex 335 sends length-delimited protobuf. Default is
-# a 4-byte big-endian unsigned length prefix; override via SAPIENT_LEN_BYTES /
-# SAPIENT_LEN_ENDIAN if a peer differs.
+# Wire framing: SAPIENT BSI Flex 335 sends length-delimited protobuf with a
+# 4-byte LITTLE-endian unsigned length prefix (per the DSTL Apex middleware:
+# `struct.pack("<I", len)` / `struct.unpack("<I", ...)`, matching protobuf's
+# little-endian convention). Override via SAPIENT_LEN_BYTES / SAPIENT_LEN_ENDIAN
+# only for a non-standard peer.
 DEFAULT_LEN_BYTES: int = 4
-DEFAULT_LEN_ENDIAN: str = "big"
+DEFAULT_LEN_ENDIAN: str = "little"

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """SAPIENT (BSI Flex 335) to TAK Gateway."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 try:
     from .constants import (  # NOQA

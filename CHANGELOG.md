@@ -1,3 +1,9 @@
+## SAPIENTCOT 0.1.1
+
+- Fix wire framing: SAPIENT length prefix is 4-byte **little-endian** (per the DSTL
+  Apex middleware `struct.pack("<I", ...)`), not big-endian. The v0.1.0 default
+  would fail to decode a real SAPIENT feed. Added a framing regression test.
+
 ## SAPIENTCOT 0.1.0
 
 - Initial release: SAPIENT (BSI Flex 335) C-UAS → TAK gateway on PyTAK.

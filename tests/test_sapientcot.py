@@ -62,6 +62,22 @@ class SapientCotTestCase(unittest.TestCase):
         msg.status_report.SetInParent()
         self.assertIsNone(fn.sapient_to_cot_xml(msg, {}))
 
+    def test_wire_framing_is_little_endian(self):
+        """SAPIENT frames protobuf with a 4-byte LITTLE-endian length prefix.
+
+        Matches the DSTL Apex middleware (struct.pack('<I', len)); a big-endian
+        default would mis-read the length and fail to decode a real feed.
+        """
+        import struct
+        from sapientcot import DEFAULT_LEN_ENDIAN, DEFAULT_LEN_BYTES
+
+        self.assertEqual(DEFAULT_LEN_ENDIAN, "little")
+        self.assertEqual(DEFAULT_LEN_BYTES, 4)
+        payload = _detection_message().SerializeToString()
+        header = struct.pack("<I", len(payload))  # exactly how Apex frames it
+        parsed_len = int.from_bytes(header[:DEFAULT_LEN_BYTES], DEFAULT_LEN_ENDIAN)
+        self.assertEqual(parsed_len, len(payload))
+
     def test_range_bearing_skipped(self):
         msg = sm.SapientMessage()
         msg.node_id = "n"
