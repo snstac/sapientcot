@@ -20,14 +20,17 @@ SAPIENT sensors → Fusion/HLDMM node → sapientcot → COT_URL (TAK)
 
 - `SapientMessage.detection_report` → one CoT event per detected object.
 - Geographic `Location` (`x`=lon, `y`=lat, `z`=hae; WGS84, degrees or radians)
-  → CoT `<point>`. Range/bearing detections are skipped until node-position
-  tracking lands.
+  → CoT `<point>`.
 - `classification` (highest-confidence type) → CoT callsign **and CoT battle
   dimension**: person → ground infantry (`a-u-G-U-C-I`), vehicle → ground
   vehicle (`a-u-G-E-V-C`), vessel → sea surface (`a-u-S-X`), drone/UAS → air
   (`a-u-A`); unclassified → unknown ground (`a-u-G`). Set `COT_TYPE` to force one
   type for every detection (e.g. a pure C-UAS laydown).
 - `detection_confidence`, classification, and `state` → CoT `<remarks>`.
+- **RangeBearing** detections (range/azimuth from the sensor) are resolved to
+  lat/lon using the reporting node's location learned from its **StatusReport**.
+- **StatusReport** → a sensor-position CoT marker (the sensors themselves on the
+  map) with system state + battery.
 - UID is `SAPIENT.<node_id>.<object_id>` so tracks are stable across reports.
 
 ## Install

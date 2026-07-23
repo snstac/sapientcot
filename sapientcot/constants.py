@@ -19,6 +19,10 @@ DEFAULT_COT_TYPE_HOSTILE: str = "a-h-A-M-F-Q"
 # Detections are transient; keep the stale window short by default (seconds).
 DEFAULT_COT_STALE: str = "60"
 
+# CoT type for a SAPIENT sensor/node marker (from StatusReport) — friendly ground
+# equipment sensor. Override with SENSOR_COT_TYPE.
+DEFAULT_SENSOR_COT_TYPE: str = "a-f-G-E-S"
+
 # SAPIENT DetectionReportClassification.type is free text. Map common substrings
 # to a MIL-STD-2525 CoT battle dimension (unknown affiliation). First match wins.
 CLASS_COT_TYPES = (

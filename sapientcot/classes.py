@@ -21,9 +21,23 @@ def _load_message_class(version: str):
 class SapientWorker(pytak.QueueWorker):
     """Read length-delimited SAPIENT protobuf from a Fusion/HLDMM node and emit CoT."""
 
+    def __init__(self, queue, config):
+        super().__init__(queue, config)
+        # {node_id: (lat, lon, hae)} learned from StatusReports, used to resolve
+        # RangeBearing detections (range/azimuth from the reporting sensor).
+        self._node_locations: dict = {}
+
     async def handle_data(self, message) -> None:
-        """Convert a parsed SapientMessage to CoT and enqueue it."""
-        event = sapientcot.sapient_to_cot(message, self.config)
+        """Route a parsed SapientMessage: StatusReport -> track node + sensor CoT;
+        DetectionReport -> detection CoT (RangeBearing resolved via node location)."""
+        node_loc = sapientcot.node_location_from_status(message)
+        if node_loc is not None:
+            self._node_locations[message.node_id] = node_loc
+            sensor = sapientcot.status_to_cot(message, self.config)
+            if sensor:
+                await self.put_queue(sensor)
+            return
+        event = sapientcot.sapient_to_cot(message, self.config, self._node_locations)
         if event:
             await self.put_queue(event)
 

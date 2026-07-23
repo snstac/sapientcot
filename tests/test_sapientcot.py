@@ -105,7 +105,7 @@ class SapientCotTestCase(unittest.TestCase):
         parsed_len = int.from_bytes(header[:DEFAULT_LEN_BYTES], DEFAULT_LEN_ENDIAN)
         self.assertEqual(parsed_len, len(payload))
 
-    def test_range_bearing_skipped(self):
+    def test_range_bearing_skipped_without_node_location(self):
         msg = sm.SapientMessage()
         msg.node_id = "n"
         d = msg.detection_report
@@ -113,6 +113,36 @@ class SapientCotTestCase(unittest.TestCase):
         d.range_bearing.range = 100.0
         d.range_bearing.azimuth = 45.0
         self.assertIsNone(fn.sapient_to_cot_xml(msg, {}))
+
+    def test_range_bearing_resolved_with_node_location(self):
+        from sapient_msg.bsi_flex_335_v2_0 import range_bearing_pb2 as rbpb
+        msg = sm.SapientMessage()
+        msg.node_id = "node-1"
+        d = msg.detection_report
+        d.object_id = "o1"
+        d.range_bearing.azimuth = 90.0    # due east
+        d.range_bearing.range = 1000.0    # 1 km
+        d.range_bearing.coordinate_system = rbpb.RANGE_BEARING_COORDINATE_SYSTEM_DEGREES_M
+        cot = fn.sapient_to_cot_xml(msg, {}, {"node-1": (0.0, 0.0, 0.0)})
+        self.assertIsNotNone(cot)
+        point = cot.find("point")
+        self.assertAlmostEqual(float(point.get("lat")), 0.0, places=3)   # east: ~no lat change
+        self.assertAlmostEqual(float(point.get("lon")), 0.008983, places=4)  # ~1km east at equator
+
+    def test_status_report_to_sensor_cot(self):
+        msg = sm.SapientMessage()
+        msg.node_id = "node-9"
+        sr = msg.status_report
+        sr.system = 1  # SYSTEM_OK
+        sr.node_location.x = -122.0
+        sr.node_location.y = 37.0
+        sr.node_location.coordinate_system = loc.LOCATION_COORDINATE_SYSTEM_LAT_LNG_DEG_M
+        self.assertEqual(fn.node_location_from_status(msg), (37.0, -122.0, 0.0))
+        cot = fn.status_to_cot_xml(msg, {})
+        self.assertIsNotNone(cot)
+        self.assertEqual(cot.get("type"), "a-f-G-E-S")
+        self.assertEqual(cot.get("uid"), "SAPIENT.node.node-9")
+        self.assertAlmostEqual(float(cot.find("point").get("lat")), 37.0, places=4)
 
 
 if __name__ == "__main__":
